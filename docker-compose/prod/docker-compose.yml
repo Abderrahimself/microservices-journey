@@ -1,0 +1,292 @@
+#services:
+#  configserver:
+#    image: "abderrahimself/configserver:s6"
+#    container_name: configserver-ms
+#    ports:
+#      - "8071:8071"
+#    depends_on:
+#      rabbitmq:
+#        condition: service_healthy
+#    healthcheck:
+#      test: "curl --fail --silent localhost:8071/actuator/health/readiness | grep UP || exit 1"
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 10s
+#    extends:
+#      file: common-config.yml
+#      service: network-deploy-service
+#
+#  accounts:
+#    image: "abderrahimself/accounts:s6"
+#    container_name: accounts-ms
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      configserver:
+#        condition: service_healthy
+#    environment:
+#      SPRING_APPLICATION_NAME: "accounts"
+#    extends:
+#      file: common-config.yml
+#      service: microservice-configserver-config
+#
+#  loans:
+#    image: "abderrahimself/loans:s6"
+#    container_name: loans-ms
+#    ports:
+#      - "8090:8090"
+#    depends_on:
+#      configserver:
+#        condition: service_healthy
+#    environment:
+#      SPRING_APPLICATION_NAME: loans
+#    extends:
+#      file: common-config.yml
+#      service: microservice-configserver-config
+#
+#  cards:
+#    image: "abderrahimself/cards:s6"
+#    container_name: cards-ms
+#    ports:
+#      - "9000:9000"
+#    depends_on:
+#      configserver:
+#        condition: service_healthy
+#    environment:
+#      SPRING_APPLICATION_NAME: cards
+#    extends:
+#      file: common-config.yml
+#      service: microservice-configserver-config
+#
+#  rabbitmq:
+#    image: "rabbitmq:4-management"
+#    hostname: rabbitmq
+#    ports:
+#      - "5672:5672"
+#      - "15672:15672"
+#    healthcheck:
+#      test: rabbitmq-diagnostics check_port_connectivity
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 5s
+#    extends:
+#      file: common-config.yml
+#      service: network-deploy-service
+#
+#networks:
+#  abderrahimself:
+#    driver: "bridge"
+
+services:
+  configserver:
+    image: "abderrahimself/configserver:s7"
+    container_name: configserver-ms-prod
+    ports:
+      - "9010:9010"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: "curl --fail --silent localhost:9010/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  accounts:
+    image: "abderrahimself/accounts:s7"
+    container_name: accounts-ms-prod
+    ports:
+      - "9020:9020"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      accountsdb:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: "accounts"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://accountsdb:3306/accountsdb"
+    extends:
+      file: common-config.yml
+      service: microservice-configserver-config
+
+  loans:
+    image: "abderrahimself/loans:s7"
+    container_name: loans-ms-prod
+    ports:
+      - "9030:9030"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      loansdb:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: loans
+      SPRING_DATASOURCE_URL: "jdbc:mysql://loansdb:3306/loansdb"
+    extends:
+      file: common-config.yml
+      service: microservice-configserver-config
+
+  cards:
+    image: "abderrahimself/cards:s7"
+    container_name: cards-ms-prod
+    ports:
+      - "9040:9040"
+    depends_on:
+      configserver:
+        condition: service_healthy
+      cardsdb:
+        condition: service_healthy
+    environment:
+      SPRING_APPLICATION_NAME: cards
+      SPRING_DATASOURCE_URL: "jdbc:mysql://cardsdb:3306/cardsdb"
+    extends:
+      file: common-config.yml
+      service: microservice-configserver-config
+
+  # Database Services
+  accountsdb:
+    image: mysql:latest
+    container_name: accountsdb-prod
+    ports:
+      - "4310:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: accountsdb
+    volumes:
+      - accountsdb_prod_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  loansdb:
+    image: mysql:latest
+    container_name: loansdb-prod
+    ports:
+      - "4320:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: loansdb
+    volumes:
+      - loansdb_prod_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  cardsdb:
+    image: mysql:latest
+    container_name: cardsdb-prod
+    ports:
+      - "4330:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cardsdb
+    volumes:
+      - cardsdb_prod_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  # phpMyAdmin Services
+  phpmyadmin-accounts:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin-accounts-prod
+    ports:
+      - "9110:80"
+    environment:
+      PMA_HOST: accountsdb
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      accountsdb:
+        condition: service_healthy
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  phpmyadmin-loans:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin-loans-prod
+    ports:
+      - "9120:80"
+    environment:
+      PMA_HOST: loansdb
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      loansdb:
+        condition: service_healthy
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  phpmyadmin-cards:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin-cards-prod
+    ports:
+      - "9130:80"
+    environment:
+      PMA_HOST: cardsdb
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      cardsdb:
+        condition: service_healthy
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  rabbitmq:
+    image: "rabbitmq:4-management"
+    hostname: rabbitmq-prod
+    container_name: rabbitmq-prod
+    ports:
+      - "6672:5672"
+      - "16672:15672"
+    volumes:
+      - rabbitmq_prod_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+volumes:
+  accountsdb_prod_data:
+  loansdb_prod_data:
+  cardsdb_prod_data:
+  rabbitmq_prod_data:
+
+networks:
+  abderrahimself:
+    driver: "bridge"

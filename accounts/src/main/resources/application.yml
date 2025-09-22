@@ -1,0 +1,110 @@
+#server:
+#  port: 8020
+#spring:
+#  application:
+#    name: "accounts"
+#  profiles:
+#    active: "prod"
+#  datasource:
+#    url: jdbc:mysql://localhost:3310/accountsdb
+#    username: root
+#    password: root
+#  jpa:
+#    show-sql: true
+#  sql:
+#    init:
+#      mode: always
+#  config:
+#    import: "optional:configserver:http://localhost:8010/"
+#  rabbitmq:
+#    host: "localhost"
+#    port: 5672
+#    username: "guest"
+#    password: "guest"
+#
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "*"
+#
+#  endpoint:
+#    shutdown:
+#      enabled: true
+#  info:
+#    env:
+#      enabled: true
+#
+#endpoints:
+#  shutdown:
+#    enabled: true
+#
+#eureka:
+#  instance:
+#    preferIpAddress: true
+#  client:
+#    fetchRegistry: true
+#    registerWithEureka: true
+#    serviceUrl:
+#      defaultZone: "http://localhost:8761/eureka"
+#
+#info:
+#  app:
+#    name: "accounts"
+#    description: "Accounts Service"
+#    version: "1.0.0"
+
+server:
+  port: 8020
+spring:
+  application:
+    name: "accounts"
+  profiles:
+    active: "default"  # Changed from "prod" to "default"
+  datasource:
+    url: jdbc:mysql://accountsdb:3306/accountsdb  # Fixed: container name and port
+    username: root
+    password: root
+  jpa:
+    show-sql: true
+  sql:
+    init:
+      mode: always
+  config:
+    import: "optional:configserver:http://configserver:8010/"  # Fixed: container name
+  rabbitmq:
+    host: "rabbitmq"  # Fixed: container name
+    port: 5672
+    username: "guest"
+    password: "guest"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    shutdown:
+      enabled: true
+  info:
+    env:
+      enabled: true
+
+endpoints:
+  shutdown:
+    enabled: true
+
+eureka:
+  instance:
+    preferIpAddress: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: "http://eurekaserver:8761/eureka/"  # Fixed: container name and trailing slash
+
+info:
+  app:
+    name: "accounts"
+    description: "Accounts Service"
+    version: "1.0.0"

@@ -1,0 +1,52 @@
+#services:
+#  network-deploy-service:
+#    networks:
+#      - abderrahimself
+#
+#  microservice-base-config:
+#    extends:
+#      service: network-deploy-service
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 700m
+#    environment:
+#      SPRING_RABBITMQ_HOST: "rabbitmq"
+#
+#  microservice-configserver-config:
+#    extends:
+#      service: microservice-base-config
+#    environment:
+#      SPRING_PROFILES_ACTIVE: prod
+#      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+
+services:
+  network-deploy-service:
+    networks:
+      - abderrahimself
+
+  microservice-base-config:
+    extends:
+      service: network-deploy-service
+    deploy:
+      resources:
+        limits:
+          memory: 1g  # Increased memory for production
+        reservations:
+          memory: 512m
+    environment:
+      SPRING_RABBITMQ_HOST: "rabbitmq"
+
+  microservice-db-config:
+    extends:
+      service: microservice-base-config
+    environment:
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+
+  microservice-configserver-config:
+    extends:
+      service: microservice-db-config
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:9010/
