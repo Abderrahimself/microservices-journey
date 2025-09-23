@@ -14,6 +14,8 @@ import net.abderrahimself.loans.dto.LoansContactInfoDto;
 import net.abderrahimself.loans.dto.LoansDto;
 import net.abderrahimself.loans.dto.ResponseDto;
 import net.abderrahimself.loans.service.ILoansService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -31,6 +33,8 @@ import org.springframework.web.bind.annotation.*;
         description = "CRUD REST APIs in EazyBank to create, update, fetch and delete loan details"
 )
 public class LoansController {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final ILoansService iLoansService;
 
@@ -70,9 +74,11 @@ public class LoansController {
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     @GetMapping("/fetch")
-    public ResponseEntity<LoansDto> fetchLoanDetails(@RequestParam
+    public ResponseEntity<LoansDto> fetchLoanDetails(@RequestParam("abderrahimself-correlation-id") String correlationId,
+                                                    @RequestParam
                                                      @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
                                                      String mobileNumber) {
+        logger.debug("abderrahimself-correlation-id found", correlationId);
         LoansDto loansDto = iLoansService.fetchLoan(mobileNumber);
         return ResponseEntity.status(HttpStatus.OK).body(loansDto);
     }

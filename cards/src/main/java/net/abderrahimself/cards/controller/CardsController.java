@@ -14,6 +14,8 @@ import net.abderrahimself.cards.dto.CardsDto;
 import net.abderrahimself.cards.dto.ErrorResponseDto;
 import net.abderrahimself.cards.dto.ResponseDto;
 import net.abderrahimself.cards.service.ICardsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -31,6 +33,8 @@ import org.springframework.web.bind.annotation.*;
         description = "CRUD REST APIs to create, fetch, update and delete cards"
 )
 public class CardsController {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final ICardsService iCardsService;
 
@@ -69,9 +73,11 @@ public class CardsController {
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     @GetMapping("/fetch")
-    public ResponseEntity<CardsDto> fetchCardDetails(@RequestParam
+    public ResponseEntity<CardsDto> fetchCardDetails(@RequestParam("abderrahimself-correlation-id") String correlationId,
+                                                    @RequestParam
                                                      @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
                                                      String mobileNumber) {
+        logger.debug("abderrahimself-correlation-id found", correlationId);
         CardsDto cardsDto = iCardsService.fetchCard(mobileNumber);
         return ResponseEntity.status(HttpStatus.OK).body(cardsDto);
     }

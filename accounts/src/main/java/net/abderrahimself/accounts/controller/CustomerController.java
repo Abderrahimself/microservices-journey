@@ -11,13 +11,12 @@ import net.abderrahimself.accounts.dto.CustomerDetailsDto;
 import net.abderrahimself.accounts.dto.ErrorResponseDto;
 import net.abderrahimself.accounts.service.ICustomersService;
 import org.apache.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Tag(name = "Customer Controller", description = "Customer Controller")
@@ -26,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CustomerController {
 
     private ICustomersService iCustomersService;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public CustomerController(ICustomersService iCustomersService) {
         this.iCustomersService = iCustomersService;
@@ -49,8 +49,13 @@ public class CustomerController {
             )
     })
     @GetMapping("/fetchCustomerDetails")
-    public ResponseEntity<CustomerDetailsDto> fetchCustomerDetails(@RequestParam @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits") String mobileNumber) {
-        CustomerDetailsDto customerDetailsDto = iCustomersService.fetchCustomerDetails(mobileNumber);
+    public ResponseEntity<CustomerDetailsDto> fetchCustomerDetails(@RequestHeader("abderrahimself-correlation-id") String correlationId,
+                                                                        @RequestParam
+                                                                       @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits") String mobileNumber
+
+    ) {
+        logger.debug("abderrahimself-correlation-id found", correlationId);
+        CustomerDetailsDto customerDetailsDto = iCustomersService.fetchCustomerDetails(mobileNumber, correlationId);
         return ResponseEntity.status(HttpStatus.SC_OK).body(customerDetailsDto);
     }
 }

@@ -57,9 +57,17 @@ management:
     web:
       exposure:
         include: "*"
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
   endpoint:
     shutdown:
       enabled: true
+    health:
+      probes:
+        enabled: true
   info:
     env:
       enabled: true
@@ -80,3 +88,7 @@ info:
     name: "cards"
     description: "Cards Service"
     version: "1.0.0"
+
+logging:
+  level:
+    net.abderrahimself.cards: DEBUG
