@@ -1,5 +1,7 @@
 package net.abderrahimself.accounts.controller;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,6 +13,8 @@ import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 //import lombok.Value;
 import net.abderrahimself.accounts.dto.AccountsContactInfoDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import net.abderrahimself.accounts.constants.AccountsConstants;
@@ -36,6 +40,8 @@ import org.springframework.web.bind.annotation.*;
 public class AccountsController {
 
     private final IAccountService iAccountService;
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public AccountsController(IAccountService iAccountService) {
         this.iAccountService = iAccountService;
@@ -185,9 +191,17 @@ public class AccountsController {
                     )
             )
     })
+    @Retry(name = "getBuildVersion", fallbackMethod = "getBuildVersionFallback")
     @GetMapping("/build-version")
     public ResponseEntity<String> getBuildVersion() {
+        logger.debug("Build version fetched successfully");
+//        throw new RuntimeException("Build version fetched failed");
         return ResponseEntity.status(HttpStatus.OK).body(BuildVersion);
+    }
+
+    public ResponseEntity<String> getBuildVersionFallback(Throwable t){
+        logger.debug("Build version fetched failed");
+        return ResponseEntity.status(HttpStatus.OK).body("0.9");
     }
 
     @Operation(
@@ -207,9 +221,14 @@ public class AccountsController {
                     )
             )
     })
+    @RateLimiter(name = "getJavaVersion", fallbackMethod = "getJavaVersionFallback")
     @GetMapping("/java-version")
     public ResponseEntity<String> getJavaVersion() {
         return ResponseEntity.status(HttpStatus.OK).body(environment.getProperty("JAVA_HOME"));
+    }
+
+    public ResponseEntity<String> getJavaVersionFallback(Throwable t){
+        return ResponseEntity.status(HttpStatus.OK).body("Java 17 i guess");
     }
 
     @GetMapping("/contact-info")

@@ -73,7 +73,7 @@ public class CardsController {
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     @GetMapping("/fetch")
-    public ResponseEntity<CardsDto> fetchCardDetails(@RequestParam("abderrahimself-correlation-id") String correlationId,
+    public ResponseEntity<CardsDto> fetchCardDetails(@RequestHeader("abderrahimself-correlation-id") String correlationId,
                                                     @RequestParam
                                                      @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
                                                      String mobileNumber) {

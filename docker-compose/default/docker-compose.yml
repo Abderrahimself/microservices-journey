@@ -1,3 +1,237 @@
+##services:
+##  gatewayserver:
+##    image: "abderrahimself/gatewayserver:s9"
+##    container_name: gatewayserver-ms
+##    ports:
+##      - "8050:8050"
+##    depends_on:
+##      configserver:
+##        condition: service_healthy
+##      eurekaserver:
+##        condition: service_started
+##    environment:
+##      SPRING_APPLICATION_NAME: "gatewayserver"
+##    extends:
+##      file: common-config.yml
+##      service: microservice-configserver-config
+##  eurekaserver:
+##    image: "abderrahimself/eurekaserver:s9"
+##    container_name: eurekaserver-ms
+##    ports:
+##      - "8761:8761"
+##    networks:
+##      - abderrahimself
+##    environment:
+##      SPRING_CLOUD_CONFIG_ENABLED: "false"
+##
+##  configserver:
+##    image: "abderrahimself/configserver:s9"
+##    container_name: configserver-ms
+##    ports:
+##      - "8010:8010"
+##    depends_on:
+##      rabbitmq:
+##        condition: service_healthy
+##      eurekaserver:
+##        condition: service_started
+##    healthcheck:
+##      test: "curl --fail --silent localhost:8010/actuator/health/readiness | grep UP || exit 1"
+##      interval: 10s
+##      timeout: 5s
+##      retries: 10
+##      start_period: 10s
+##    networks:
+##      - abderrahimself
+##    environment:
+##      SPRING_RABBITMQ_HOST: "rabbitmq"
+##      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eurekaserver:8761/eureka"
+##
+##  accounts:
+##    image: "abderrahimself/accounts:s9"
+##    container_name: accounts-ms
+##    ports:
+##      - "8020:8020"
+##    depends_on:
+##      configserver:
+##        condition: service_healthy
+##      accountsdb:
+##        condition: service_healthy
+##      eurekaserver:
+##        condition: service_started
+##    environment:
+##      SPRING_APPLICATION_NAME: "accounts"
+##      SPRING_DATASOURCE_URL: "jdbc:mysql://accountsdb:3306/accountsdb"
+##    extends:
+##      file: common-config.yml
+##      service: microservice-configserver-config
+##
+##  loans:
+##    image: "abderrahimself/loans:s9"
+##    container_name: loans-ms
+##    ports:
+##      - "8030:8030"
+##    depends_on:
+##      configserver:
+##        condition: service_healthy
+##      loansdb:
+##        condition: service_healthy
+##      eurekaserver:
+##        condition: service_started
+##    environment:
+##      SPRING_APPLICATION_NAME: loans
+##      SPRING_DATASOURCE_URL: "jdbc:mysql://loansdb:3306/loansdb"
+##    extends:
+##      file: common-config.yml
+##      service: microservice-configserver-config
+##
+##  cards:
+##    image: "abderrahimself/cards:s9"
+##    container_name: cards-ms
+##    ports:
+##      - "8040:8040"
+##    depends_on:
+##      configserver:
+##        condition: service_healthy
+##      cardsdb:
+##        condition: service_healthy
+##      eurekaserver:
+##        condition: service_started
+##    environment:
+##      SPRING_APPLICATION_NAME: cards
+##      SPRING_DATASOURCE_URL: "jdbc:mysql://cardsdb:3306/cardsdb"
+##    extends:
+##      file: common-config.yml
+##      service: microservice-configserver-config
+##
+##  # Database Services
+##  accountsdb:
+##    image: mysql:latest
+##    container_name: accountsdb
+##    ports:
+##      - "3310:3306"
+##    environment:
+##      MYSQL_ROOT_PASSWORD: root
+##      MYSQL_DATABASE: accountsdb
+##    healthcheck:
+##      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+##      interval: 10s
+##      timeout: 5s
+##      retries: 10
+##      start_period: 60s
+##    extends:
+##      file: common-config.yml
+##      service: network-deploy-service
+##
+##  loansdb:
+##    image: mysql:latest
+##    container_name: loansdb
+##    ports:
+##      - "3320:3306"
+##    environment:
+##      MYSQL_ROOT_PASSWORD: root
+##      MYSQL_DATABASE: loansdb
+##    healthcheck:
+##      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+##      interval: 10s
+##      timeout: 5s
+##      retries: 10
+##      start_period: 60s
+##    extends:
+##      file: common-config.yml
+##      service: network-deploy-service
+##
+##  cardsdb:
+##    image: mysql:latest
+##    container_name: cardsdb
+##    ports:
+##      - "3330:3306"
+##    environment:
+##      MYSQL_ROOT_PASSWORD: root
+##      MYSQL_DATABASE: cardsdb
+##    healthcheck:
+##      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+##      interval: 10s
+##      timeout: 5s
+##      retries: 10
+##      start_period: 60s
+##    extends:
+##      file: common-config.yml
+##      service: network-deploy-service
+##
+##  # phpMyAdmin Services
+##  phpmyadmin-accounts:
+##    image: phpmyadmin/phpmyadmin:latest
+##    container_name: phpmyadmin-accounts
+##    ports:
+##      - "8110:80"
+##    environment:
+##      PMA_HOST: accountsdb
+##      PMA_PORT: 3306
+##      PMA_USER: root
+##      PMA_PASSWORD: root
+##    depends_on:
+##      accountsdb:
+##        condition: service_healthy
+##    extends:
+##      file: common-config.yml
+##      service: network-deploy-service
+##
+##  phpmyadmin-loans:
+##    image: phpmyadmin/phpmyadmin:latest
+##    container_name: phpmyadmin-loans
+##    ports:
+##      - "8120:80"
+##    environment:
+##      PMA_HOST: loansdb
+##      PMA_PORT: 3306
+##      PMA_USER: root
+##      PMA_PASSWORD: root
+##    depends_on:
+##      loansdb:
+##        condition: service_healthy
+##    extends:
+##      file: common-config.yml
+##      service: network-deploy-service
+##
+##  phpmyadmin-cards:
+##    image: phpmyadmin/phpmyadmin:latest
+##    container_name: phpmyadmin-cards
+##    ports:
+##      - "8130:80"
+##    environment:
+##      PMA_HOST: cardsdb
+##      PMA_PORT: 3306
+##      PMA_USER: root
+##      PMA_PASSWORD: root
+##    depends_on:
+##      cardsdb:
+##        condition: service_healthy
+##    extends:
+##      file: common-config.yml
+##      service: network-deploy-service
+##
+##  rabbitmq:
+##    image: "rabbitmq:4-management"
+##    hostname: rabbitmq
+##    ports:
+##      - "5672:5672"
+##      - "15672:15672"
+##    healthcheck:
+##      test: rabbitmq-diagnostics check_port_connectivity
+##      interval: 10s
+##      timeout: 5s
+##      retries: 10
+##      start_period: 5s
+##    extends:
+##      file: common-config.yml
+##      service: network-deploy-service
+##
+##networks:
+##  abderrahimself:
+##    driver: "bridge"
+#
+#version: "3.8"
+#
 #services:
 #  gatewayserver:
 #    image: "abderrahimself/gatewayserver:s9"
@@ -8,12 +242,25 @@
 #      configserver:
 #        condition: service_healthy
 #      eurekaserver:
-#        condition: service_started
+#        condition: service_healthy
+#      accounts:
+#        condition: service_healthy
+#      loans:
+#        condition: service_healthy
+#      cards:
+#        condition: service_healthy
+#    healthcheck:
+#      test: "curl --fail --silent localhost:8050/actuator/health/readiness | grep UP || exit 1"
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 15s
 #    environment:
 #      SPRING_APPLICATION_NAME: "gatewayserver"
 #    extends:
 #      file: common-config.yml
 #      service: microservice-configserver-config
+#
 #  eurekaserver:
 #    image: "abderrahimself/eurekaserver:s9"
 #    container_name: eurekaserver-ms
@@ -21,6 +268,12 @@
 #      - "8761:8761"
 #    networks:
 #      - abderrahimself
+#    healthcheck:
+#      test: "curl --fail --silent localhost:8761/actuator/health | grep UP || exit 1"
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 20s
 #    environment:
 #      SPRING_CLOUD_CONFIG_ENABLED: "false"
 #
@@ -33,13 +286,13 @@
 #      rabbitmq:
 #        condition: service_healthy
 #      eurekaserver:
-#        condition: service_started
+#        condition: service_healthy
 #    healthcheck:
 #      test: "curl --fail --silent localhost:8010/actuator/health/readiness | grep UP || exit 1"
 #      interval: 10s
 #      timeout: 5s
 #      retries: 10
-#      start_period: 10s
+#      start_period: 15s
 #    networks:
 #      - abderrahimself
 #    environment:
@@ -57,7 +310,13 @@
 #      accountsdb:
 #        condition: service_healthy
 #      eurekaserver:
-#        condition: service_started
+#        condition: service_healthy
+#    healthcheck:
+#      test: "curl --fail --silent localhost:8020/actuator/health/readiness | grep UP || exit 1"
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 15s
 #    environment:
 #      SPRING_APPLICATION_NAME: "accounts"
 #      SPRING_DATASOURCE_URL: "jdbc:mysql://accountsdb:3306/accountsdb"
@@ -76,7 +335,13 @@
 #      loansdb:
 #        condition: service_healthy
 #      eurekaserver:
-#        condition: service_started
+#        condition: service_healthy
+#    healthcheck:
+#      test: "curl --fail --silent localhost:8030/actuator/health/readiness | grep UP || exit 1"
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 15s
 #    environment:
 #      SPRING_APPLICATION_NAME: loans
 #      SPRING_DATASOURCE_URL: "jdbc:mysql://loansdb:3306/loansdb"
@@ -95,7 +360,13 @@
 #      cardsdb:
 #        condition: service_healthy
 #      eurekaserver:
-#        condition: service_started
+#        condition: service_healthy
+#    healthcheck:
+#      test: "curl --fail --silent localhost:8040/actuator/health/readiness | grep UP || exit 1"
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 15s
 #    environment:
 #      SPRING_APPLICATION_NAME: cards
 #      SPRING_DATASOURCE_URL: "jdbc:mysql://cardsdb:3306/cardsdb"
@@ -234,7 +505,7 @@ version: "3.8"
 
 services:
   gatewayserver:
-    image: "abderrahimself/gatewayserver:s9"
+    image: "abderrahimself/gatewayserver:s10"
     container_name: gatewayserver-ms
     ports:
       - "8050:8050"
@@ -249,6 +520,8 @@ services:
         condition: service_healthy
       cards:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
       test: "curl --fail --silent localhost:8050/actuator/health/readiness | grep UP || exit 1"
       interval: 10s
@@ -257,12 +530,17 @@ services:
       start_period: 15s
     environment:
       SPRING_APPLICATION_NAME: "gatewayserver"
+      SPRING_DATA_REDIS_HOST: "redis"
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: "redispass"
+      SPRING_DATA_REDIS_TIMEOUT: 2000ms
+      SPRING_DATA_REDIS_CONNECT_TIMEOUT: 2000ms
     extends:
       file: common-config.yml
       service: microservice-configserver-config
 
   eurekaserver:
-    image: "abderrahimself/eurekaserver:s9"
+    image: "abderrahimself/eurekaserver:s10"
     container_name: eurekaserver-ms
     ports:
       - "8761:8761"
@@ -278,7 +556,7 @@ services:
       SPRING_CLOUD_CONFIG_ENABLED: "false"
 
   configserver:
-    image: "abderrahimself/configserver:s9"
+    image: "abderrahimself/configserver:s10"
     container_name: configserver-ms
     ports:
       - "8010:8010"
@@ -300,7 +578,7 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eurekaserver:8761/eureka"
 
   accounts:
-    image: "abderrahimself/accounts:s9"
+    image: "abderrahimself/accounts:s10"
     container_name: accounts-ms
     ports:
       - "8020:8020"
@@ -325,7 +603,7 @@ services:
       service: microservice-configserver-config
 
   loans:
-    image: "abderrahimself/loans:s9"
+    image: "abderrahimself/loans:s10"
     container_name: loans-ms
     ports:
       - "8030:8030"
@@ -350,7 +628,7 @@ services:
       service: microservice-configserver-config
 
   cards:
-    image: "abderrahimself/cards:s9"
+    image: "abderrahimself/cards:s10"
     container_name: cards-ms
     ports:
       - "8040:8040"
@@ -429,6 +707,23 @@ services:
       file: common-config.yml
       service: network-deploy-service
 
+  # Redis Service
+  redis:
+    image: redis:7-alpine
+    container_name: redis-ms
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass redispass
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
   # phpMyAdmin Services
   phpmyadmin-accounts:
     image: phpmyadmin/phpmyadmin:latest
@@ -476,6 +771,23 @@ services:
       PMA_PASSWORD: root
     depends_on:
       cardsdb:
+        condition: service_healthy
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  # Redis Commander (Redis Management UI)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    ports:
+      - "8140:8081"
+    environment:
+      REDIS_HOSTS: "redis:redis:6379:0:redispass"
+      HTTP_USER: admin
+      HTTP_PASSWORD: admin
+    depends_on:
+      redis:
         condition: service_healthy
     extends:
       file: common-config.yml
