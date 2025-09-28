@@ -1,3 +1,36 @@
+#services:
+#  network-deploy-service:
+#    networks:
+#      - abderrahimself
+#
+#  microservice-base-config:
+#    extends:
+#      service: network-deploy-service
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 700m
+#    environment:
+#      SPRING_RABBITMQ_HOST: "rabbitmq"
+#      JAVA_TOOL_OPTIONS: "-javaagent:/app/libs/opentelemetry-javaagent-1.27.0.jar"
+#      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+#      OTEL_METRICS_EXPORTER: none
+#
+#  microservice-db-config:
+#    extends:
+#      service: microservice-base-config
+#    environment:
+#      SPRING_DATASOURCE_USERNAME: root
+#      SPRING_DATASOURCE_PASSWORD: root
+#
+#  microservice-configserver-config:
+#    extends:
+#      service: microservice-db-config
+#    environment:
+#      SPRING_PROFILES_ACTIVE: default
+#      SPRING_CONFIG_IMPORT: configserver:http://configserver:8010/
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eurekaserver:8761/eureka"
+
 services:
   network-deploy-service:
     networks:
@@ -12,10 +45,33 @@ services:
           memory: 700m
     environment:
       SPRING_RABBITMQ_HOST: "rabbitmq"
+      JAVA_TOOL_OPTIONS: "-javaagent:/app/libs/opentelemetry-javaagent-1.27.0.jar"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+      OTEL_METRICS_EXPORTER: none
+      # Add OpenTelemetry instrumentation settings
+      OTEL_INSTRUMENTATION_HTTP_ENABLED: "true"
+      OTEL_INSTRUMENTATION_SPRING_WEB_ENABLED: "true"
+      OTEL_INSTRUMENTATION_JDBC_ENABLED: "true"
+      OTEL_PROPAGATORS: "tracecontext,baggage,b3"
+
+  microservice-webmvc-config:
+    extends:
+      service: microservice-base-config
+    environment:
+      # Spring WebMVC specific (for accounts, loans, cards)
+      OTEL_INSTRUMENTATION_SPRING_WEBMVC_ENABLED: "true"
+
+  microservice-webflux-config:
+    extends:
+      service: microservice-base-config
+    environment:
+      # Spring WebFlux specific (for gateway)
+      OTEL_INSTRUMENTATION_SPRING_WEBFLUX_ENABLED: "true"
+      OTEL_INSTRUMENTATION_REACTOR_NETTY_ENABLED: "true"
 
   microservice-db-config:
     extends:
-      service: microservice-base-config
+      service: microservice-webmvc-config
     environment:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
@@ -23,6 +79,14 @@ services:
   microservice-configserver-config:
     extends:
       service: microservice-db-config
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8010/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eurekaserver:8761/eureka"
+
+  microservice-gateway-config:
+    extends:
+      service: microservice-webflux-config
     environment:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8010/
