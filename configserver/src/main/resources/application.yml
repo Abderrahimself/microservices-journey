@@ -1,21 +1,72 @@
+##spring:
+##  application:
+##    name: "configserver"
+##  profiles:
+###     active: native
+##    active: git
+##  cloud:
+##    config:
+##      server:
+##        native:
+###          search-locations: "classpath:/config"
+###          search-locations: "file:///Users//eazybytes//Documents//config"
+##        git:
+##          uri: "https://github.com/Abderrahimself/config.git"
+##          default-label: main
+##          timeout: 5
+##          clone-on-start: true
+##          force-pull: true
+##
+##management:
+##  endpoints:
+##    web:
+##      exposure:
+##        include: "*"
+##  health:
+##    readiness-state:
+##      enabled: true
+##    liveness-state:
+##      enabled: true
+##  endpoint:
+##    health:
+##      probes:
+##        enabled: true
+##
+##encrypt:
+##  key: "45D81EC1EF61DF9AD8D3E5BB397F9"
+##
+##  rabbitmq:
+##    host: "localhost"
+##    port: 5672
+##    username: "guest"
+##    password: "guest"
+##
+##
+##server:
+##  port: 8010
+#
+#server:
+#  port: 8010
+#
 #spring:
 #  application:
 #    name: "configserver"
 #  profiles:
-##     active: native
 #    active: git
 #  cloud:
 #    config:
 #      server:
-#        native:
-##          search-locations: "classpath:/config"
-##          search-locations: "file:///Users//eazybytes//Documents//config"
 #        git:
 #          uri: "https://github.com/Abderrahimself/config.git"
 #          default-label: main
 #          timeout: 5
 #          clone-on-start: true
 #          force-pull: true
+#  rabbitmq:
+#    host: "rabbitmq"
+#    port: 5672
+#    username: "guest"
+#    password: "guest"
 #
 #management:
 #  endpoints:
@@ -31,19 +82,21 @@
 #    health:
 #      probes:
 #        enabled: true
+#  metrics:
+#    tags:
+#      application: ${spring.application.name}
 #
 #encrypt:
 #  key: "45D81EC1EF61DF9AD8D3E5BB397F9"
 #
-#  rabbitmq:
-#    host: "localhost"
-#    port: 5672
-#    username: "guest"
-#    password: "guest"
-#
-#
-#server:
-#  port: 8010
+#eureka:
+#  instance:
+#    preferIpAddress: true
+#  client:
+#    fetchRegistry: true
+#    registerWithEureka: true
+#    serviceUrl:
+#      defaultZone: "http://eurekaserver:8761/eureka/"
 
 server:
   port: 8010
@@ -73,14 +126,22 @@ management:
     web:
       exposure:
         include: "*"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+    prometheus:
+      enabled: true
   health:
     readiness-state:
       enabled: true
     liveness-state:
       enabled: true
-  endpoint:
-    health:
-      probes:
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
         enabled: true
 
 encrypt:
@@ -94,3 +155,9 @@ eureka:
     registerWithEureka: true
     serviceUrl:
       defaultZone: "http://eurekaserver:8761/eureka/"
+
+logging:
+  level:
+    net.abderrahimself.configserver: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] [${spring.application.name},%X{trace_id:-},%X{span_id:-}] %logger{36} - %msg%n"

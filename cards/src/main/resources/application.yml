@@ -1,12 +1,42 @@
+##server:
+##  port: 8040
+##spring:
+##  application:
+##    name: "cards"
+##  profiles:
+##    active: "prod"
+##  datasource:
+##    url: jdbc:mysql://localhost:3330/cardsdb
+##    username: root
+##    password: root
+##  jpa:
+##    show-sql: true
+##  sql:
+##    init:
+##      mode: always
+##  config:
+##    import: "optional:configserver:http://localhost:8010/"
+##  rabbitmq:
+##    host: "localhost"
+##    port: 5672
+##    username: "guest"
+##    password: "guest"
+##
+##management:
+##  endpoints:
+##    web:
+##      exposure:
+##        include: "*"
+#
 #server:
 #  port: 8040
 #spring:
 #  application:
 #    name: "cards"
 #  profiles:
-#    active: "prod"
+#    active: "default"
 #  datasource:
-#    url: jdbc:mysql://localhost:3330/cardsdb
+#    url: jdbc:mysql://cardsdb:3306/cardsdb
 #    username: root
 #    password: root
 #  jpa:
@@ -15,9 +45,9 @@
 #    init:
 #      mode: always
 #  config:
-#    import: "optional:configserver:http://localhost:8010/"
+#    import: "optional:configserver:http://configserver:8010/"
 #  rabbitmq:
-#    host: "localhost"
+#    host: "rabbitmq"
 #    port: 5672
 #    username: "guest"
 #    password: "guest"
@@ -27,6 +57,44 @@
 #    web:
 #      exposure:
 #        include: "*"
+#  health:
+#    readiness-state:
+#      enabled: true
+#    liveness-state:
+#      enabled: true
+#  endpoint:
+#    shutdown:
+#      enabled: true
+#    health:
+#      probes:
+#        enabled: true
+#  info:
+#    env:
+#      enabled: true
+#  metrics:
+#    tags:
+#      application: ${spring.application.name}
+#
+#
+#
+#eureka:
+#  instance:
+#    preferIpAddress: true
+#  client:
+#    fetchRegistry: true
+#    registerWithEureka: true
+#    serviceUrl:
+#      defaultZone: "http://eurekaserver:8761/eureka/"
+#
+#info:
+#  app:
+#    name: "cards"
+#    description: "Cards Service"
+#    version: "1.0.0"
+#
+#logging:
+#  level:
+#    net.abderrahimself.cards: DEBUG
 
 server:
   port: 8040
@@ -57,22 +125,28 @@ management:
     web:
       exposure:
         include: "*"
-  health:
-    readiness-state:
-      enabled: true
-    liveness-state:
-      enabled: true
   endpoint:
     shutdown:
       enabled: true
     health:
       probes:
         enabled: true
+    prometheus:
+      enabled: true
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
   info:
     env:
       enabled: true
-
-
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
+        enabled: true
 
 eureka:
   instance:
@@ -92,3 +166,5 @@ info:
 logging:
   level:
     net.abderrahimself.cards: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] [${spring.application.name},%X{trace_id:-},%X{span_id:-}] %logger{36} - %msg%n"
