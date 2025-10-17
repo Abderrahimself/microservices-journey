@@ -54,8 +54,11 @@ public class CustomerController {
                                                                        @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits") String mobileNumber
 
     ) {
-        logger.debug("abderrahimself-correlation-id found", correlationId);
+        System.out.println("=== CONTROLLER METHOD CALLED ===");
+        logger.debug("fetchCustomerDetails method started");
         CustomerDetailsDto customerDetailsDto = iCustomersService.fetchCustomerDetails(mobileNumber, correlationId);
+        logger.debug("fetchCustomerDetails method ended");
+        System.out.println("=== CONTROLLER METHOD FINISHED ===");
         return ResponseEntity.status(HttpStatus.SC_OK).body(customerDetailsDto);
     }
 }

@@ -1,0 +1,3 @@
+# MinIO data
+docker-compose/default/.data/
+.data/
