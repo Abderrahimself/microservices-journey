@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jenkins-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.m2:/root/.m2
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    networks:
+      - devops-network
+
+volumes:
+  jenkins_home:
+    driver: local
+
+networks:
+  devops-network:
+    driver: bridge
