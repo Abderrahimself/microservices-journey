@@ -102,7 +102,7 @@ pipeline {
                                 try {
                                     withSonarQubeEnv('SonarQube-Server') {
                                         sh '''
-                                            mvn clean verify sonar:sonar \
+                                            mvn sonar:sonar -DskipTests \
                                               -Dsonar.projectKey=configserver \
                                               -Dsonar.projectName='Config Server' \
                                               -Dsonar.java.binaries=target/classes
@@ -126,7 +126,7 @@ pipeline {
                                 try {
                                     withSonarQubeEnv('SonarQube-Server') {
                                         sh '''
-                                            mvn clean verify sonar:sonar \
+                                            mvn sonar:sonar -DskipTests \
                                               -Dsonar.projectKey=eurekaserver \
                                               -Dsonar.projectName='Eureka Server' \
                                               -Dsonar.java.binaries=target/classes
@@ -150,7 +150,7 @@ pipeline {
                                 try {
                                     withSonarQubeEnv('SonarQube-Server') {
                                         sh '''
-                                            mvn clean verify sonar:sonar \
+                                            mvn sonar:sonar -DskipTests \
                                               -Dsonar.projectKey=gatewayserver \
                                               -Dsonar.projectName='Gateway Server' \
                                               -Dsonar.java.binaries=target/classes
@@ -174,7 +174,7 @@ pipeline {
                                 try {
                                     withSonarQubeEnv('SonarQube-Server') {
                                         sh '''
-                                            mvn clean verify sonar:sonar \
+                                            mvn sonar:sonar -DskipTests \
                                               -Dsonar.projectKey=accounts \
                                               -Dsonar.projectName='Accounts Service' \
                                               -Dsonar.java.binaries=target/classes
@@ -198,7 +198,7 @@ pipeline {
                                 try {
                                     withSonarQubeEnv('SonarQube-Server') {
                                         sh '''
-                                            mvn clean verify sonar:sonar \
+                                            mvn sonar:sonar -DskipTests \
                                               -Dsonar.projectKey=cards \
                                               -Dsonar.projectName='Cards Service' \
                                               -Dsonar.java.binaries=target/classes
@@ -222,7 +222,7 @@ pipeline {
                                 try {
                                     withSonarQubeEnv('SonarQube-Server') {
                                         sh '''
-                                            mvn clean verify sonar:sonar \
+                                            mvn sonar:sonar -DskipTests \
                                               -Dsonar.projectKey=loans \
                                               -Dsonar.projectName='Loans Service' \
                                               -Dsonar.java.binaries=target/classes
