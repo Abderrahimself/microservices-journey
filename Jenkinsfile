@@ -313,17 +313,15 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 echo '========== Pushing Images to Docker Hub =========='
-                script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials') {
-                        sh """
-                            docker push ${DOCKER_HUB_REPO}/configserver:${IMAGE_TAG}
-                            docker push ${DOCKER_HUB_REPO}/eurekaserver:${IMAGE_TAG}
-                            docker push ${DOCKER_HUB_REPO}/gatewayserver:${IMAGE_TAG}
-                            docker push ${DOCKER_HUB_REPO}/accounts:${IMAGE_TAG}
-                            docker push ${DOCKER_HUB_REPO}/cards:${IMAGE_TAG}
-                            docker push ${DOCKER_HUB_REPO}/loans:${IMAGE_TAG}
-                        """
-                    }
+                withDockerRegistry([credentialsId: 'dockerhub-credentials', url: 'https://registry.hub.docker.com']) {
+                    sh """
+                        docker push ${DOCKER_HUB_REPO}/configserver:${IMAGE_TAG}
+                        docker push ${DOCKER_HUB_REPO}/eurekaserver:${IMAGE_TAG}
+                        docker push ${DOCKER_HUB_REPO}/gatewayserver:${IMAGE_TAG}
+                        docker push ${DOCKER_HUB_REPO}/accounts:${IMAGE_TAG}
+                        docker push ${DOCKER_HUB_REPO}/cards:${IMAGE_TAG}
+                        docker push ${DOCKER_HUB_REPO}/loans:${IMAGE_TAG}
+                    """
                 }
             }
         }
