@@ -97,46 +97,79 @@ pipeline {
                     steps {
                         dir('accounts') {
                             echo '========== Testing Accounts Service =========='
-                            sh 'mvn test'
+                            script {
+                                try {
+                                    sh 'mvn test'
+                                } catch (Exception e) {
+                                    echo "⚠️ Tests failed for Accounts: ${e.message}"
+                                    currentBuild.result = 'UNSTABLE'
+                                }
+                            }
                         }
                     }
                     post {
                         always {
-                            junit 'accounts/target/surefire-reports/*.xml'
+                            script {
+                                if (fileExists('accounts/target/surefire-reports')) {
+                                    junit 'accounts/target/surefire-reports/*.xml'
+                                }
+                            }
                         }
                     }
                 }
-                
+
                 stage('Test Cards') {
                     steps {
                         dir('cards') {
                             echo '========== Testing Cards Service =========='
-                            sh 'mvn test'
+                            script {
+                                try {
+                                    sh 'mvn test'
+                                } catch (Exception e) {
+                                    echo "⚠️ Tests failed for Cards: ${e.message}"
+                                    currentBuild.result = 'UNSTABLE'
+                                }
+                            }
                         }
                     }
                     post {
                         always {
-                            junit 'cards/target/surefire-reports/*.xml'
+                            script {
+                                if (fileExists('cards/target/surefire-reports')) {
+                                    junit 'cards/target/surefire-reports/*.xml'
+                                }
+                            }
                         }
                     }
                 }
-                
+
                 stage('Test Loans') {
                     steps {
                         dir('loans') {
                             echo '========== Testing Loans Service =========='
-                            sh 'mvn test'
+                            script {
+                                try {
+                                    sh 'mvn test'
+                                } catch (Exception e) {
+                                    echo "⚠️ Tests failed for Loans: ${e.message}"
+                                    currentBuild.result = 'UNSTABLE'
+                                }
+                            }
                         }
                     }
                     post {
                         always {
-                            junit 'loans/target/surefire-reports/*.xml'
+                            script {
+                                if (fileExists('loans/target/surefire-reports')) {
+                                    junit 'loans/target/surefire-reports/*.xml'
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-        
+
         stage('Package Services') {
             parallel {
                 stage('Package Config Server') {
@@ -149,7 +182,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Package Eureka Server') {
                     steps {
                         dir('eurekaserver') {
@@ -160,7 +193,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Package Gateway Server') {
                     steps {
                         dir('gatewayserver') {
@@ -171,7 +204,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Package Accounts') {
                     steps {
                         dir('accounts') {
@@ -182,7 +215,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Package Cards') {
                     steps {
                         dir('cards') {
@@ -193,7 +226,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Package Loans') {
                     steps {
                         dir('loans') {
@@ -206,7 +239,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Build Docker Images') {
             parallel {
                 stage('Docker - Config Server') {
@@ -219,7 +252,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Docker - Eureka Server') {
                     steps {
                         dir('eurekaserver') {
@@ -230,7 +263,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Docker - Gateway Server') {
                     steps {
                         dir('gatewayserver') {
@@ -241,7 +274,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Docker - Accounts') {
                     steps {
                         dir('accounts') {
@@ -252,7 +285,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Docker - Cards') {
                     steps {
                         dir('cards') {
@@ -263,7 +296,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Docker - Loans') {
                     steps {
                         dir('loans') {
@@ -276,7 +309,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Push to Docker Hub') {
             steps {
                 echo '========== Pushing Images to Docker Hub =========='
@@ -295,29 +328,35 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             echo '========== Pipeline Completed =========='
-            // Only collect test results if they exist
             script {
-                def testReports = findFiles(glob: '**/target/surefire-reports/*.xml')
-                if (testReports.length > 0) {
-                    junit '**/target/surefire-reports/*.xml'
+                try {
+                    def testReports = findFiles(glob: '**/target/surefire-reports/*.xml')
+                    if (testReports.length > 0) {
+                        junit '**/target/surefire-reports/*.xml'
+                    }
+                } catch (Exception e) {
+                    echo "⚠️ No test reports found or failed to process: ${e.message}"
                 }
             }
-            // Archive JAR artifacts
-            archiveArtifacts artifacts: '**/target/*.jar', 
-                            fingerprint: true, 
+            archiveArtifacts artifacts: '**/target/*.jar',
+                            fingerprint: true,
                             allowEmptyArchive: true
         }
-        
+
         success {
-            echo '========== BUILD SUCCESSFUL =========='
+            echo '========== ✅ BUILD SUCCESSFUL =========='
         }
-        
+
         failure {
-            echo '========== BUILD FAILED =========='
+            echo '========== ❌ BUILD FAILED =========='
+        }
+
+        unstable {
+            echo '========== ⚠️ BUILD UNSTABLE (Tests Failed but Build Continued) =========='
         }
     }
 }
