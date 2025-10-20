@@ -9,18 +9,19 @@ pipeline {
     environment {
         DOCKER_HUB_REPO = 'abderrahimself'
         IMAGE_TAG = 's11'
+        DOCKER_HUB_CREDS = 'dockerhub-credentials'
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
                 echo '========== Cloning Repository =========='
-                git branch: 'tp-devops', 
+                git branch: 'tp-devops',
                     url: 'https://github.com/Abderrahimself/microservices-journey.git'
                 sh 'ls -la'
             }
         }
-        
+
         stage('Build All Services') {
             parallel {
                 stage('Build Config Server') {
@@ -33,7 +34,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Build Eureka Server') {
                     steps {
                         dir('eurekaserver') {
@@ -44,7 +45,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Build Gateway Server') {
                     steps {
                         dir('gatewayserver') {
@@ -55,7 +56,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Build Accounts Service') {
                     steps {
                         dir('accounts') {
@@ -66,7 +67,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Build Cards Service') {
                     steps {
                         dir('cards') {
@@ -77,7 +78,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Build Loans Service') {
                     steps {
                         dir('loans') {
@@ -90,7 +91,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Run Unit Tests') {
             parallel {
                 stage('Test Accounts') {
@@ -313,15 +314,36 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 echo '========== Pushing Images to Docker Hub =========='
-                withDockerRegistry([credentialsId: 'dockerhub-credentials', url: 'https://registry.hub.docker.com']) {
-                    sh """
-                        docker push ${DOCKER_HUB_REPO}/configserver:${IMAGE_TAG}
-                        docker push ${DOCKER_HUB_REPO}/eurekaserver:${IMAGE_TAG}
-                        docker push ${DOCKER_HUB_REPO}/gatewayserver:${IMAGE_TAG}
-                        docker push ${DOCKER_HUB_REPO}/accounts:${IMAGE_TAG}
-                        docker push ${DOCKER_HUB_REPO}/cards:${IMAGE_TAG}
-                        docker push ${DOCKER_HUB_REPO}/loans:${IMAGE_TAG}
-                    """
+                script {
+                    withCredentials([usernamePassword(credentialsId: env.DOCKER_HUB_CREDS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh '''
+                            set +x
+                            echo "Logging in to Docker Hub..."
+                            docker logout || true
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+                            echo "Pushing configserver..."
+                            docker push abderrahimself/configserver:s11
+
+                            echo "Pushing eurekaserver..."
+                            docker push abderrahimself/eurekaserver:s11
+
+                            echo "Pushing gatewayserver..."
+                            docker push abderrahimself/gatewayserver:s11
+
+                            echo "Pushing accounts..."
+                            docker push abderrahimself/accounts:s11
+
+                            echo "Pushing cards..."
+                            docker push abderrahimself/cards:s11
+
+                            echo "Pushing loans..."
+                            docker push abderrahimself/loans:s11
+
+                            echo "Logging out..."
+                            docker logout
+                        '''
+                    }
                 }
             }
         }
