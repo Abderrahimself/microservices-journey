@@ -316,33 +316,35 @@ pipeline {
                 echo '========== Pushing Images to Docker Hub =========='
                 script {
                     withCredentials([usernamePassword(credentialsId: env.DOCKER_HUB_CREDS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh '''
-                            set +x
-                            echo "Logging in to Docker Hub..."
-                            docker logout || true
-                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        retry(3) {
+                            sh '''
+                                set +x
+                                echo "Logging in to Docker Hub..."
+                                docker logout || true
+                                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
-                            echo "Pushing configserver..."
-                            docker push abderrahimself/configserver:s11
+                                echo "Pushing configserver..."
+                                docker push abderrahimself/configserver:s11
 
-                            echo "Pushing eurekaserver..."
-                            docker push abderrahimself/eurekaserver:s11
+                                echo "Pushing eurekaserver..."
+                                docker push abderrahimself/eurekaserver:s11
 
-                            echo "Pushing gatewayserver..."
-                            docker push abderrahimself/gatewayserver:s11
+                                echo "Pushing gatewayserver..."
+                                docker push abderrahimself/gatewayserver:s11
 
-                            echo "Pushing accounts..."
-                            docker push abderrahimself/accounts:s11
+                                echo "Pushing accounts..."
+                                docker push abderrahimself/accounts:s11
 
-                            echo "Pushing cards..."
-                            docker push abderrahimself/cards:s11
+                                echo "Pushing cards..."
+                                docker push abderrahimself/cards:s11
 
-                            echo "Pushing loans..."
-                            docker push abderrahimself/loans:s11
+                                echo "Pushing loans..."
+                                docker push abderrahimself/loans:s11
 
-                            echo "Logging out..."
-                            docker logout
-                        '''
+                                echo "Logging out..."
+                                docker logout
+                            '''
+                        }
                     }
                 }
             }
@@ -354,10 +356,7 @@ pipeline {
             echo '========== Pipeline Completed =========='
             script {
                 try {
-                    def testReports = findFiles(glob: '**/target/surefire-reports/*.xml')
-                    if (testReports.length > 0) {
-                        junit '**/target/surefire-reports/*.xml'
-                    }
+                    junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
                 } catch (Exception e) {
                     echo "⚠️ No test reports found or failed to process: ${e.message}"
                 }
