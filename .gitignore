@@ -1,3 +1,4 @@
 # MinIO data
 docker-compose/default/.data/
 .data/
+devops-tools/**/.data/
