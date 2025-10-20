@@ -92,6 +92,176 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            parallel {
+                stage('SonarQube - Config Server') {
+                    steps {
+                        dir('configserver') {
+                            echo '========== Analyzing Config Server =========='
+                            script {
+                                try {
+                                    withSonarQubeEnv('SonarQube-Server') {
+                                        sh '''
+                                            mvn clean verify sonar:sonar \
+                                              -Dsonar.projectKey=configserver \
+                                              -Dsonar.projectName='Config Server' \
+                                              -Dsonar.java.binaries=target/classes
+                                        '''
+                                    }
+                                    echo '✅ SonarQube analysis completed for Config Server'
+                                } catch (Exception e) {
+                                    echo "⚠️ SonarQube analysis failed for Config Server: ${e.message}"
+                                    currentBuild.result = 'UNSTABLE'
+                                }
+                            }
+                        }
+                    }
+                }
+
+                stage('SonarQube - Eureka Server') {
+                    steps {
+                        dir('eurekaserver') {
+                            echo '========== Analyzing Eureka Server =========='
+                            script {
+                                try {
+                                    withSonarQubeEnv('SonarQube-Server') {
+                                        sh '''
+                                            mvn clean verify sonar:sonar \
+                                              -Dsonar.projectKey=eurekaserver \
+                                              -Dsonar.projectName='Eureka Server' \
+                                              -Dsonar.java.binaries=target/classes
+                                        '''
+                                    }
+                                    echo '✅ SonarQube analysis completed for Eureka Server'
+                                } catch (Exception e) {
+                                    echo "⚠️ SonarQube analysis failed for Eureka Server: ${e.message}"
+                                    currentBuild.result = 'UNSTABLE'
+                                }
+                            }
+                        }
+                    }
+                }
+
+                stage('SonarQube - Gateway Server') {
+                    steps {
+                        dir('gatewayserver') {
+                            echo '========== Analyzing Gateway Server =========='
+                            script {
+                                try {
+                                    withSonarQubeEnv('SonarQube-Server') {
+                                        sh '''
+                                            mvn clean verify sonar:sonar \
+                                              -Dsonar.projectKey=gatewayserver \
+                                              -Dsonar.projectName='Gateway Server' \
+                                              -Dsonar.java.binaries=target/classes
+                                        '''
+                                    }
+                                    echo '✅ SonarQube analysis completed for Gateway Server'
+                                } catch (Exception e) {
+                                    echo "⚠️ SonarQube analysis failed for Gateway Server: ${e.message}"
+                                    currentBuild.result = 'UNSTABLE'
+                                }
+                            }
+                        }
+                    }
+                }
+
+                stage('SonarQube - Accounts') {
+                    steps {
+                        dir('accounts') {
+                            echo '========== Analyzing Accounts Service =========='
+                            script {
+                                try {
+                                    withSonarQubeEnv('SonarQube-Server') {
+                                        sh '''
+                                            mvn clean verify sonar:sonar \
+                                              -Dsonar.projectKey=accounts \
+                                              -Dsonar.projectName='Accounts Service' \
+                                              -Dsonar.java.binaries=target/classes
+                                        '''
+                                    }
+                                    echo '✅ SonarQube analysis completed for Accounts'
+                                } catch (Exception e) {
+                                    echo "⚠️ SonarQube analysis failed for Accounts: ${e.message}"
+                                    currentBuild.result = 'UNSTABLE'
+                                }
+                            }
+                        }
+                    }
+                }
+
+                stage('SonarQube - Cards') {
+                    steps {
+                        dir('cards') {
+                            echo '========== Analyzing Cards Service =========='
+                            script {
+                                try {
+                                    withSonarQubeEnv('SonarQube-Server') {
+                                        sh '''
+                                            mvn clean verify sonar:sonar \
+                                              -Dsonar.projectKey=cards \
+                                              -Dsonar.projectName='Cards Service' \
+                                              -Dsonar.java.binaries=target/classes
+                                        '''
+                                    }
+                                    echo '✅ SonarQube analysis completed for Cards'
+                                } catch (Exception e) {
+                                    echo "⚠️ SonarQube analysis failed for Cards: ${e.message}"
+                                    currentBuild.result = 'UNSTABLE'
+                                }
+                            }
+                        }
+                    }
+                }
+
+                stage('SonarQube - Loans') {
+                    steps {
+                        dir('loans') {
+                            echo '========== Analyzing Loans Service =========='
+                            script {
+                                try {
+                                    withSonarQubeEnv('SonarQube-Server') {
+                                        sh '''
+                                            mvn clean verify sonar:sonar \
+                                              -Dsonar.projectKey=loans \
+                                              -Dsonar.projectName='Loans Service' \
+                                              -Dsonar.java.binaries=target/classes
+                                        '''
+                                    }
+                                    echo '✅ SonarQube analysis completed for Loans'
+                                } catch (Exception e) {
+                                    echo "⚠️ SonarQube analysis failed for Loans: ${e.message}"
+                                    currentBuild.result = 'UNSTABLE'
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                echo '========== Checking Quality Gate =========='
+                script {
+                    try {
+                        timeout(time: 5, unit: 'MINUTES') {
+                            def qg = waitForQualityGate()
+                            if (qg.status != 'OK') {
+                                echo "⚠️ Quality Gate failed: ${qg.status}"
+                                currentBuild.result = 'UNSTABLE'
+                            } else {
+                                echo '✅ Quality Gate passed!'
+                            }
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️ Quality Gate check error: ${e.message}"
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
+            }
+        }
+
         stage('Run Unit Tests') {
             parallel {
                 stage('Test Accounts') {
@@ -375,7 +545,7 @@ pipeline {
         }
 
         unstable {
-            echo '========== ⚠️ BUILD UNSTABLE (Tests Failed but Build Continued) =========='
+            echo '========== ⚠️ BUILD UNSTABLE (Tests/Quality Gate Failed but Build Continued) =========='
         }
     }
 }
