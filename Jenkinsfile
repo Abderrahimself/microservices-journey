@@ -519,6 +519,51 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo '========== Deploying to Kubernetes =========='
+                script {
+                    def services = ['configserver', 'eurekaserver', 'accounts', 'cards', 'loans', 'gatewayserver']
+
+                    services.each { service ->
+                        echo "🚀 Deploying ${service}..."
+
+                        try {
+                            // Update deployment with new image
+                            sh """
+                                kubectl set image deployment/${service} \
+                                    ${service}=${env.DOCKER_HUB_REPO}/${service}:${env.IMAGE_TAG} \
+                                    --record
+                            """
+
+                            // Wait for rollout to complete (5 minutes timeout)
+                            sh """
+                                kubectl rollout status deployment/${service} --timeout=5m
+                            """
+
+                            echo "✅ ${service} deployed successfully!"
+
+                        } catch (Exception e) {
+                            echo "⚠️ Failed to deploy ${service}: ${e.message}"
+                            currentBuild.result = 'UNSTABLE'
+                        }
+                    }
+
+                    echo '========== Verifying Deployments =========='
+                    sh """
+                        echo "📊 Current pod status:"
+                        kubectl get pods -o wide
+
+                        echo ""
+                        echo "📊 Deployment status:"
+                        kubectl get deployments
+                    """
+
+                    echo '🎉 All services deployed to Kubernetes!'
+                }
+            }
+        }
     }
 
     post {
