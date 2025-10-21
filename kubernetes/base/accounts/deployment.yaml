@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accounts
+  labels:
+    app: accounts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: accounts
+  template:
+    metadata:
+      labels:
+        app: accounts
+    spec:
+      containers:
+      - name: accounts
+        image: abderrahimself/accounts:s11
+        ports:
+        - containerPort: 8020
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "default"
+        - name: SPRING_CONFIG_IMPORT
+          value: "optional:configserver:http://configserver:8010/"
+        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+          value: "http://eurekaserver:8761/eureka"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mysql://mysql-accounts:3306/accountsdb"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "root"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "root"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8020
+          initialDelaySeconds: 120
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8020
+          initialDelaySeconds: 90
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: accounts
+spec:
+  selector:
+    app: accounts
+  ports:
+  - port: 8020
+    targetPort: 8020
+  type: ClusterIP
